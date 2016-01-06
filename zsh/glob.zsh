@@ -1,0 +1,3 @@
+setopt extendedglob
+setopt globcomplete
+setopt shwordsplit
