@@ -1,31 +1,31 @@
-# vim: ft=zsh ts=2 sw=2 sts=2
+# vim: ft=zsh ts=2 sw=2 sts=2 et
 
 _join_str() {
   printf '%s' "$@"
 }
 
 _prompt_fg() {
-	_join_str "%{%F{$1}%}"
+  _join_str "%{%F{$1}%}"
 }
 
 _prompt_bg() {
-	_join_str "%{%K{$1}%}"
+  _join_str "%{%K{$1}%}"
 }
 
 _prompt_bold() {
-	_join_str $'%{%B%}'
+  _join_str $'%{%B%}'
 }
 
 _prompt_inverse() {
-	_join_str $'%{%S%}'
+  _join_str $'%{%S%}'
 }
 
 _prompt_underline() {
-	_join_str $'%{%U%}'
+  _join_str $'%{%U%}'
 }
 
 _prompt_reset_color() {
-	_join_str $'%{%b%f%k%s%u%}'
+  _join_str $'%{%b%f%k%s%u%}'
 }
 
 _prompt_default_color() {
@@ -68,17 +68,17 @@ _prompt_bracket() {
 
 _prompt_datetime() {
   local DATETIME_COLOR="$(_prompt_fg 'yellow')"
-	_prompt_bracket "$DATETIME_COLOR" $'%D{%F %a %T %Z}'
+  _prompt_bracket "$DATETIME_COLOR" $'%D{%F %a %T %Z}'
 }
 
 _prompt_cwd() {
   local CWD_COLOR="$(_prompt_fg 'white')"
-	_prompt_bracket "$CWD_COLOR" $'%~'
+  _prompt_bracket "$CWD_COLOR" $'%~'
 }
 
 _prompt_git() {
   (( $+commands[git] )) || return
-	$(git rev-parse --is-inside-work-tree >/dev/null 2>&1) || return
+  $(git rev-parse --is-inside-work-tree >/dev/null 2>&1) || return
 
   _prompt_git_ref() {
     local PL_BRANCH_CHAR=$'\ue0a0' # 
@@ -102,7 +102,7 @@ _prompt_git() {
     zstyle ':vcs_info:*' actionformats ' %u%c'
     vcs_info
 
-	  local GIT_INFO_MSG="${vcs_info_msg_0_%% }"
+    local GIT_INFO_MSG="${vcs_info_msg_0_%% }"
     [[ -n "$GIT_INFO_MSG" ]] || return
     _join_str "$GIT_INFO_MSG" ' '
   }
@@ -163,7 +163,7 @@ _prompt_ret_status() {
 
 _prompt_uid() {
   local UID_COLOR="$(_prompt_fg $'%(!:red:green)')"
-	_join_str "$UID_COLOR" $'%(!:#:$)'
+  _join_str "$UID_COLOR" $'%(!:#:$)'
 }
 
 _prompt_job() {
@@ -174,7 +174,7 @@ _prompt_job() {
 
 _prompt_histno() {
   local HISTNO_COLOR="$(_prompt_fg 'black')$(_prompt_underline)"
-	_join_str "$HISTNO_COLOR" $'!%!'
+  _join_str "$HISTNO_COLOR" $'!%!'
 }
 
 _prompt_client() {
@@ -244,29 +244,29 @@ _prompt_client() {
 }
 
 _build_prompt() {
-	setopt promptsubst
+  setopt promptsubst
 
-	_prompt_default_color
-	_prompt_top_anchor
-	_prompt_datetime
-	_prompt_cwd
-	_prompt_git
-	_prompt_newline
-	_prompt_bottom_anchor
-	_prompt_ret_status
-	_prompt_uid
-	_prompt_reset_color
+  _prompt_default_color
+  _prompt_top_anchor
+  _prompt_datetime
+  _prompt_cwd
+  _prompt_git
+  _prompt_newline
+  _prompt_bottom_anchor
+  _prompt_ret_status
+  _prompt_uid
+  _prompt_reset_color
 }
 
 _build_rprompt() {
-	setopt transientrprompt
+  setopt transientrprompt
 
-	_prompt_default_color
+  _prompt_default_color
   _prompt_job
-	_prompt_histno
+  _prompt_histno
   _prompt_space
-	_prompt_client
-	_prompt_reset_color
+  _prompt_client
+  _prompt_reset_color
 }
 
 : "${PROMPT_DEFAULT_FG:=white}"
