@@ -1,11 +1,17 @@
 # vim: ft=zsh ts=2 sw=2 sts=2 et
 
-WORDCHARS=$'!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~'
+unix-word-rubout() {
+  local WORDCHARS=$'!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~'
+  zle backward-kill-word
+}
 
-autoload -U select-word-style
-select-word-style bash
+zle -N unix-word-rubout
+bindkey '^W' unix-word-rubout
 
-type sudo-command-line >/dev/null 2>&1 && \
-bindkey '^[e' sudo-command-line
+if type sudo-command-line >/dev/null 2>&1; then
+  bindkey '^[e' sudo-command-line
+fi
+
 bindkey '^U' backward-kill-line
-bindkey '^W' backward-delete-word
+bindkey '^[k' kill-whole-line
+bindkey '^[l' down-case-word
