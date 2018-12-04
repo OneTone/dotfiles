@@ -12,16 +12,19 @@ set rtp+=~/.vim/bundle/Vundle.vim
 call vundle#begin()
 
 Plugin 'VundleVim/Vundle.vim'
+Plugin 'Lokaltog/vim-easymotion'
+Plugin 'Valloric/YouCompleteMe'
+Plugin 'Yggdroot/LeaderF'
 Plugin 'a.vim'
 Plugin 'chrisbra/csv.vim'
 Plugin 'ctrlpvim/ctrlp.vim'
 Plugin 'flazz/vim-colorschemes'
 Plugin 'kergoth/vim-bitbake'
-Plugin 'Lokaltog/vim-easymotion'
 Plugin 'luochen1990/rainbow'
 Plugin 'majutsushi/tagbar'
 Plugin 'mbbill/fencview'
 Plugin 'mileszs/ack.vim'
+Plugin 'nelstrom/vim-visual-star-search'
 Plugin 'ntpeters/vim-better-whitespace'
 Plugin 'pangloss/vim-javascript'
 Plugin 'scrooloose/nerdcommenter'
@@ -31,10 +34,8 @@ Plugin 'sk1418/QFGrep'
 Plugin 'terryma/vim-multiple-cursors'
 Plugin 'tpope/vim-fugitive'
 Plugin 'tpope/vim-surround'
-Plugin 'Valloric/YouCompleteMe'
 Plugin 'vim-airline/vim-airline'
 Plugin 'vim-ruby/vim-ruby'
-Plugin 'Yggdroot/LeaderF'
 
 call vundle#end()
 
