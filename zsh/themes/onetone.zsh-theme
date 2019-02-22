@@ -205,7 +205,7 @@ _build_prompt() {
       case "$OSTYPE" in
         darwin*) LOGO='' ;;
         linux*)
-          case "$(lsb_release -s -i)" in
+          case "$(lsb_release -s -i 2>/dev/null)" in
             'Ubuntu') LOGO='' ;;
             'CentOS') LOGO='※' ;;
             *) LOGO='🐧' ;;
