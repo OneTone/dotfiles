@@ -117,9 +117,9 @@ _build_prompt() {
       elif [[ -e "${REPO_PATH}/MERGE_HEAD" ]]; then
         GIT_MODE=' >M<'
       elif [[ -e "${REPO_PATH}/rebase" || \
-              -e "${repo_path}/rebase-apply" || \
-              -e "${repo_path}/rebase-merge" || \
-              -e "${repo_path}/../.dotest" ]]; then
+              -e "${REPO_PATH}/rebase-apply" || \
+              -e "${REPO_PATH}/rebase-merge" || \
+              -e "${REPO_PATH}/../.dotest" ]]; then
         GIT_MODE=' >R>'
       fi
 
