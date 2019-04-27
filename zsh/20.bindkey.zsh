@@ -8,7 +8,7 @@ unix-word-rubout() {
 zle -N unix-word-rubout
 bindkey '^W' unix-word-rubout
 
-if type sudo-command-line >/dev/null 2>&1; then
+if which sudo-command-line >/dev/null 2>&1; then
   bindkey '^[e' sudo-command-line
 fi
 
