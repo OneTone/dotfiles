@@ -27,6 +27,10 @@ if [ -f "$_ZSHRC_PLUG" ]; then
   unset -f _add_omz_plugin
 fi
 
+autoload -U add-zsh-hook
+add-zsh-hook -D preexec '*omz*'
+add-zsh-hook -D precmd '*omz*'
+
 source "$ZSH/oh-my-zsh.sh"
 
 _my_omz_end="$(print -P '%D{%s.%.}' 2>/dev/null)"
