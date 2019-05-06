@@ -5,6 +5,7 @@ set ignorecase
 set infercase
 set laststatus=2
 set listchars=eol:¶,tab:»\ ,extends:›,precedes:‹,space:·,trail:␣,nbsp:¬
+set modeline
 set number relativenumber
 set pastetoggle=<F12>
 set showmatch
