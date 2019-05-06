@@ -10,11 +10,10 @@
   }
 
   _precmd_timeit() {
-    if [ "$_TIMEIT_START" ]; then
-      local DURATION="$(printf '%.3fs' $(($(_timeit_now) - _TIMEIT_START)))"
-      printf '\e[%dC\e[1;31m%s\e[m\n' $((COLUMNS - ${#DURATION} - 1)) "$DURATION"
-      unset _TIMEIT_START
-    fi
+    [ "$_TIMEIT_START" ] || return
+    local DURATION="$(printf '%.3fs' $(($(_timeit_now) - _TIMEIT_START)))"
+    printf '\e[%dC\e[1;31m%s\e[m\n' $((COLUMNS - ${#DURATION} - 1)) "$DURATION"
+    unset _TIMEIT_START
   }
 
   autoload -U add-zsh-hook
@@ -22,33 +21,37 @@
   add-zsh-hook precmd _precmd_timeit
 }
 
-_build_prompt() {
-  _join_str() {
+() {
+  _str_() {
     printf '%s' "$@"
   }
 
   _prompt_fg() {
-    _join_str "%{%F{$1}%}"
+    local COLOR="$1"
+    shift
+    _str_ "%{%F{$COLOR}%}" "$@"
   }
 
   _prompt_bg() {
-    _join_str "%{%K{$1}%}"
+    local COLOR="$1"
+    shift
+    _str_ "%{%K{$COLOR}%}" "$@"
   }
 
   _prompt_bold() {
-    _join_str $'%{%B%}'
+    _str_ '%{%B%}' "$@"
   }
 
   _prompt_inverse() {
-    _join_str $'%{%S%}'
+    _str_ '%{%S%}' "$@"
   }
 
   _prompt_underline() {
-    _join_str $'%{%U%}'
+    _str_ '%{%U%}' "$@"
   }
 
   _prompt_reset_color() {
-    _join_str $'%{%b%f%k%s%u%}'
+    _str_ '%{%b%f%k%s%u%}' "$@"
   }
 
   _prompt_default_color() {
@@ -56,47 +59,48 @@ _build_prompt() {
     local BG_COLOR="${PROMPT_DEFAULT_BG:+%K{$PROMPT_DEFAULT_BG\}}"
     : "${FG_COLOR:-%f}"
     : "${BG_COLOR:-%k}"
-    _join_str "%{%B$FG_COLOR$BG_COLOR%s%u%}"
+    _str_ "%{%B$FG_COLOR$BG_COLOR%s%u%}" "$@"
   }
 
   _prompt_space() {
-    local SPACE_COLOR="$(_prompt_default_color)"
-    printf "%s%$1s" "$SPACE_COLOR" ' '
+    _prompt_default_color "$(printf "%$1s" ' ')"
   }
 
   _prompt_newline() {
-    local LN_COLOR="$(_prompt_default_color)"
-    printf "%s\n" "$LN_COLOR"
+    _prompt_default_color $'\n'
   }
 
-  () {
-    _prompt_anchor() {
-      local ANCHOR_COLOR="$(_prompt_fg 'blue')"
-      _join_str "$ANCHOR_COLOR" "$@"
-    }
+  _prompt_anchor() {
+    _prompt_fg 'blue' "$@"
+  }
 
-    _prompt_top_anchor() {
-      _prompt_anchor '┌─'
-    }
+  _prompt_top_anchor() {
+    _prompt_anchor '┌─'
+  }
 
-    _prompt_bottom_anchor() {
-      _prompt_anchor '└─'
-    }
+  _prompt_bottom_anchor() {
+    _prompt_anchor '└─'
   }
 
   _prompt_bracket() {
-    local BRACKET_COLOR="$(_prompt_fg 'blue')"
-    printf '%s[%s%s]' "$BRACKET_COLOR" "$(_join_str "$@")" "$BRACKET_COLOR"
+    _prompt_fg 'blue' '[' "$@"
+    _prompt_fg 'blue' ']'
   }
 
   _prompt_datetime() {
-    local DATETIME_COLOR="$(_prompt_fg 'yellow')"
-    _prompt_bracket "$DATETIME_COLOR" $'%D{%F %a %T %Z}'
+    _prompt_datetime_d() {
+      _prompt_fg 'yellow' '%D{%F %a %T %Z}'
+    }
+
+    _prompt_bracket "$(_prompt_datetime_d)"
   }
 
   _prompt_cwd() {
-    local CWD_COLOR="$(_prompt_fg 'white')"
-    _prompt_bracket "$CWD_COLOR" $'%~'
+  _prompt_cwd_d() {
+      _prompt_fg 'white' '%~'
+    }
+
+  _prompt_bracket "$(_prompt_cwd_d)"
   }
 
   _prompt_git() {
@@ -111,7 +115,7 @@ _build_prompt() {
       GIT_REF="➦ $(git rev-parse --short HEAD 2>/dev/null)"
       GIT_REF="${GIT_REF/refs\/heads\//$PL_BRANCH_CHAR }"
 
-      _join_str "$GIT_REF"
+      _str_ "$GIT_REF"
     }
 
     _prompt_git_info_msg() {
@@ -126,31 +130,31 @@ _build_prompt() {
       vcs_info
 
       local GIT_INFO_MSG="${vcs_info_msg_0_%% }"
-      [[ -n "$GIT_INFO_MSG" ]] || return
-      _join_str "$GIT_INFO_MSG" ' '
+      [ "$GIT_INFO_MSG" ] || return
+      _str_ "$GIT_INFO_MSG "
     }
 
     _prompt_git_mode() {
       local REPO_PATH="$(git rev-parse --git-dir 2>/dev/null)"
       local GIT_MODE
 
-      if [[ -e "${REPO_PATH}/BISECT_LOG" ]]; then
+      if [ -e "$REPO_PATH/BISECT_LOG" ]; then
         GIT_MODE=' <B>'
-      elif [[ -e "${REPO_PATH}/MERGE_HEAD" ]]; then
+      elif [ -e "$REPO_PATH/MERGE_HEAD" ]; then
         GIT_MODE=' >M<'
-      elif [[ -e "${REPO_PATH}/rebase" || \
-              -e "${REPO_PATH}/rebase-apply" || \
-              -e "${REPO_PATH}/rebase-merge" || \
-              -e "${REPO_PATH}/../.dotest" ]]; then
+      elif [ -e "$REPO_PATH/rebase" ] || \
+           [ -e "$REPO_PATH/rebase-apply" ] || \
+           [ -e "$REPO_PATH/rebase-merge" ] || \
+           [ -e "$REPO_PATH/../.dotest" ]; then
         GIT_MODE=' >R>'
       fi
 
-      [[ -n "$GIT_MODE" ]] || return
-      _join_str "$GIT_MODE"
+      [ "$GIT_MODE" ] || return
+      _str_ "$GIT_MODE"
     }
 
     _prompt_git_d() {
-      if [[ -n "$(parse_git_dirty)" ]]; then
+      if [ "$(parse_git_dirty)" ]; then
         _prompt_fg 'magenta'
       else
         _prompt_fg 'green'
@@ -166,13 +170,12 @@ _build_prompt() {
 
   _prompt_ret_status() {
     _prompt_emotion() {
-      local EMOTION_COLOR="$(_prompt_fg '%(?:green:red)')$(_prompt_inverse)"
-      _join_str "$EMOTION_COLOR" $'%(?:☺ :☹ )'
+      _prompt_fg '%(?:green:red)'
+      _prompt_inverse '%(?:☺ :☹ )'
     }
 
     _prompt_retcode() {
-      local RETCODE_COLOR="$(_prompt_fg '%(?:green:red)')"
-      _join_str "$RETCODE_COLOR" $'%?'
+      _prompt_fg '%(?:green:red)' '%?'
     }
 
     _prompt_ret_status_d() {
@@ -185,41 +188,39 @@ _build_prompt() {
   }
 
   _prompt_uid() {
-    local UID_COLOR="$(_prompt_fg $'%(!:red:green)')"
-    _join_str "$UID_COLOR" $'%(!:#:$)'
+    _prompt_fg '%(!:red:green)' '%(!:#:$)'
   }
 
   _prompt_job() {
-    [[ "$(jobs -l | wc -l)" -gt 0 ]] || return
-    local JOB_COLOR="$(_prompt_fg 'yellow')"
-    _join_str "$JOB_COLOR" $'⚙ x%j' "$(_prompt_space)"
+    _prompt_job_d() {
+      _prompt_fg 'yellow' '⚙ x%j'
+      _prompt_space
+    }
+
+    _str_ "%(1j.$(_prompt_job_d).)"
   }
 
   _prompt_histno() {
-    local HISTNO_COLOR="$(_prompt_fg 'black')$(_prompt_underline)"
-    _join_str "$HISTNO_COLOR" $'!%!'
+    _prompt_fg 'black'
+    _prompt_underline '!%!'
   }
 
   _prompt_client() {
     _prompt_ssh() {
-      [[ -n "$SSH_CONNECTION" ]] || return
-      local SSH_COLOR="$(_prompt_fg 'red')"
-      _join_str "$SSH_COLOR" 'ssh:'
+      [ "$SSH_CONNECTION" ] || return
+      _prompt_fg 'red' 'ssh:'
     }
 
     _prompt_user() {
-      local USER_COLOR="$(_prompt_fg 'green')"
-      _join_str "$USER_COLOR" $'%n'
+      _prompt_fg 'green' '%n'
     }
 
     _prompt_at() {
-      local AT_COLOR="$(_prompt_fg 'black')"
-      _join_str "$AT_COLOR" '@'
+      _prompt_fg 'black' '@'
     }
 
     _prompt_host() {
-      local HOST_COLOR="$(_prompt_fg 'cyan')"
-      _join_str "$HOST_COLOR" $'%m'
+      _prompt_fg 'cyan' '%m'
     }
 
     _prompt_logo() {
@@ -235,15 +236,13 @@ _build_prompt() {
           ;;
       esac
 
-      [[ -n "$LOGO" ]] || return
+      [ "$LOGO" ] || return
 
-      local LOGO_COLOR="$(_prompt_fg 'yellow')"
-      _join_str "$LOGO_COLOR" "$LOGO"
+      _prompt_fg 'yellow' "$LOGO"
     }
 
     _prompt_line() {
-      local LINE_COLOR="$(_prompt_fg 'magenta')"
-      _join_str "$LINE_COLOR" '%y'
+      _prompt_fg 'magenta' '%y'
     }
 
     _prompt_client_d() {
@@ -271,6 +270,7 @@ _build_prompt() {
     _prompt_bottom_anchor
     _prompt_ret_status
     _prompt_uid
+    _prompt_space
     _prompt_reset_color
   }
 
@@ -285,14 +285,9 @@ _build_prompt() {
     _prompt_reset_color
   }
 
-  case "$1" in
-    [rR]) _build_rprompt ;;
-    *) _build_lprompt ;;
-  esac
+  : "${PROMPT_DEFAULT_FG:=white}"
+  : "${PROMPT_DEFAULT_BG:=}"
+
+  PROMPT='$(_build_lprompt)'
+  RPROMPT='$(_build_rprompt)'
 }
-
-: "${PROMPT_DEFAULT_FG:=white}"
-: "${PROMPT_DEFAULT_BG:=}"
-
-PROMPT='$(_build_prompt) '
-RPROMPT='$(_build_prompt r)'
