@@ -16,9 +16,17 @@
     unset _TIMEIT_START
   }
 
-  autoload -U add-zsh-hook
-  add-zsh-hook preexec _preexec_timeit
-  add-zsh-hook precmd _precmd_timeit
+  enable_timeit() {
+    autoload -U add-zsh-hook
+    add-zsh-hook preexec _preexec_timeit
+    add-zsh-hook precmd _precmd_timeit
+  }
+
+  disable_timeit() {
+    autoload -U add-zsh-hook
+    add-zsh-hook -d preexec _preexec_timeit
+    add-zsh-hook -d precmd _precmd_timeit
+  }
 }
 
 () {
@@ -27,14 +35,12 @@
   }
 
   _prompt_fg() {
-    local COLOR="$1"
-    shift
+    local COLOR="$1" && shift
     _str_ "%{%F{$COLOR}%}" "$@"
   }
 
   _prompt_bg() {
-    local COLOR="$1"
-    shift
+    local COLOR="$1" && shift
     _str_ "%{%K{$COLOR}%}" "$@"
   }
 
@@ -55,11 +61,9 @@
   }
 
   _prompt_default_color() {
-    local FG_COLOR="${PROMPT_DEFAULT_FG:+%F{$PROMPT_DEFAULT_FG\}}"
-    local BG_COLOR="${PROMPT_DEFAULT_BG:+%K{$PROMPT_DEFAULT_BG\}}"
-    : "${FG_COLOR:-%f}"
-    : "${BG_COLOR:-%k}"
-    _str_ "%{%B$FG_COLOR$BG_COLOR%s%u%}" "$@"
+    local FG_COLOR="${THEME_DEFAULT_FG:+%F{$THEME_DEFAULT_FG\}}"
+    local BG_COLOR="${THEME_DEFAULT_BG:+%K{$THEME_DEFAULT_BG\}}"
+    _str_ "%{%B${FG_COLOR:-%f}${BG_COLOR:-%k}%s%u%}" "$@"
   }
 
   _prompt_space() {
@@ -71,7 +75,8 @@
   }
 
   _prompt_anchor() {
-    _prompt_fg 'blue' "$@"
+    local FG_COLOR="${THEME_ANCHOR_FG:-blue}"
+    _prompt_fg "$FG_COLOR" "$@"
   }
 
   _prompt_top_anchor() {
@@ -83,29 +88,58 @@
   }
 
   _prompt_bracket() {
-    _prompt_fg 'blue' '[' "$@"
-    _prompt_fg 'blue' ']'
+    local FG_COLOR="${THEME_BRACKET_FG:-blue}"
+    _prompt_fg "$FG_COLOR" '[' "$@"
+    _prompt_fg "$FG_COLOR" ']'
   }
 
   _prompt_datetime() {
+    local FG_COLOR="${THEME_DATETIME_FG:-yellow}"
+
     _prompt_datetime_d() {
-      _prompt_fg 'yellow' '%D{%F %a %T %Z}'
+      _prompt_fg "$FG_COLOR" '%D{%F %a %T %Z}'
     }
 
-    _prompt_bracket "$(_prompt_datetime_d)"
+    _prompt_datetime_s() {
+      _prompt_fg "$FG_COLOR" '%*'
+    }
+
+    if [ "$_THEME_USE_SIMPLE" ]; then
+      _prompt_bracket "$(_prompt_datetime_s)"
+    else
+      _prompt_bracket "$(_prompt_datetime_d)"
+    fi
   }
 
   _prompt_cwd() {
-  _prompt_cwd_d() {
-      _prompt_fg 'white' '%~'
+    local FG_COLOR="${THEME_WORKINGDIR_FG:-white}"
+
+    _prompt_cwd_d() {
+      _prompt_fg "$FG_COLOR" '%~'
     }
 
-  _prompt_bracket "$(_prompt_cwd_d)"
+    _prompt_cwd_s() {
+      _prompt_fg "$FG_COLOR" '%1~'
+    }
+
+    if [ "$_THEME_USE_SIMPLE" ]; then
+      _prompt_bracket "$(_prompt_cwd_s)"
+    else
+      _prompt_bracket "$(_prompt_cwd_d)"
+    fi
   }
 
   _prompt_git() {
     ((${+commands[git]})) || return
     $(git rev-parse --is-inside-work-tree >/dev/null 2>&1) || return
+    if [ -e '.nogitprompt' ]; then
+      return
+    else
+      local CDUP="$(git rev-parse --show-cdup 2>/dev/null)"
+      if [ "$CDUP" ] && [ -e "$CDUP/.nogitprompt" ]; then
+        return
+      fi
+    fi
 
     _prompt_git_ref() {
       local PL_BRANCH_CHAR=$'\ue0a0' # 
@@ -154,10 +188,12 @@
     }
 
     _prompt_git_d() {
+      local FG_DIRTY="${THEME_VCSDIRTY_FG:-magenta}"
+      local FG_CLEAN="${THEME_VCSCLEAN_FG:-green}"
       if [ "$(parse_git_dirty)" ]; then
-        _prompt_fg 'magenta'
+        _prompt_fg "$FG_DIRTY"
       else
-        _prompt_fg 'green'
+        _prompt_fg "$FG_CLEAN"
       fi
 
       _prompt_git_ref
@@ -165,17 +201,24 @@
       _prompt_git_mode
     }
 
-    _prompt_bracket "$(_prompt_git_d)"
+    if [ "$_THEME_USE_SIMPLE" ]; then
+      return
+    else
+      _prompt_bracket "$(_prompt_git_d)"
+    fi
   }
 
   _prompt_ret_status() {
+    local FG_OK="${THEME_RETOK_FG:-green}"
+    local FG_NG="${THEME_RETNG_FG:-red}"
+
     _prompt_emotion() {
-      _prompt_fg '%(?:green:red)'
+      _prompt_fg "%(?:$FG_OK:$FG_NG)"
       _prompt_inverse '%(?:☺ :☹ )'
     }
 
     _prompt_retcode() {
-      _prompt_fg '%(?:green:red)' '%?'
+      _prompt_fg "%(?:$FG_OK:$FG_NG)" '%?'
     }
 
     _prompt_ret_status_d() {
@@ -184,43 +227,64 @@
       _prompt_retcode
     }
 
-    _prompt_bracket "$(_prompt_ret_status_d)"
+    _prompt_ret_status_s() {
+      _prompt_retcode
+    }
+
+    if [ "$_THEME_USE_SIMPLE" ]; then
+      _prompt_ret_status_s
+    else
+      _prompt_bracket "$(_prompt_ret_status_d)"
+    fi
   }
 
   _prompt_uid() {
-    _prompt_fg '%(!:red:green)' '%(!:#:$)'
+    local FG_ROOT="${THEME_UIDSUPER_FG:-red}"
+    local FG_USER="${THEME_UIDNORMAL_FG:-green}"
+    _prompt_fg "%(!:$FG_ROOT:$FG_USER)" '%(!:#:$)'
   }
 
   _prompt_job() {
+    local FG_COLOR="${THEME_JOBNUM_FG:-yellow}"
+
     _prompt_job_d() {
-      _prompt_fg 'yellow' '⚙ x%j'
+      _prompt_fg "$FG_COLOR" '⚙ x%j'
       _prompt_space
     }
 
-    _str_ "%(1j.$(_prompt_job_d).)"
+    if [ "$_THEME_USE_SIMPLE" ]; then
+      return
+    else
+      _str_ "%(1j.$(_prompt_job_d).)"
+    fi
   }
 
   _prompt_histno() {
-    _prompt_fg 'black'
+    local FG_COLOR="${THEME_HISTNO_FG:-black}"
+    _prompt_fg "$FG_COLOR"
     _prompt_underline '!%!'
   }
 
   _prompt_client() {
     _prompt_ssh() {
       [ "$SSH_CONNECTION" ] || return
-      _prompt_fg 'red' 'ssh:'
+      local FG_COLOR="${THEME_SSHCONNECTION_FG:-red}"
+      _prompt_fg "$FG_COLOR" 'ssh:'
     }
 
     _prompt_user() {
-      _prompt_fg 'green' '%n'
+      local FG_COLOR="${THEME_USERNAME_FG:-green}"
+      _prompt_fg "$FG_COLOR" '%n'
     }
 
     _prompt_at() {
-      _prompt_fg 'black' '@'
+      local FG_COLOR="${THEME_ATSIGN_FG:-black}"
+      _prompt_fg "$FG_COLOR" '@'
     }
 
     _prompt_host() {
-      _prompt_fg 'cyan' '%m'
+      local FG_COLOR="${THEME_HOSTNAME_FG:-cyan}"
+      _prompt_fg "$FG_COLOR" '%m'
     }
 
     _prompt_logo() {
@@ -237,12 +301,13 @@
       esac
 
       [ "$LOGO" ] || return
-
-      _prompt_fg 'yellow' "$LOGO"
+      local FG_COLOR="${THEME_SYSLOGO_FG:-yellow}"
+      _prompt_fg "$FG_COLOR" "$LOGO"
     }
 
     _prompt_line() {
-      _prompt_fg 'magenta' '%y'
+      local FG_COLOR="${THEME_TERMLINE_FG:-magenta}"
+      _prompt_fg "$FG_COLOR" '%y'
     }
 
     _prompt_client_d() {
@@ -255,10 +320,14 @@
       _prompt_line
     }
 
-    _prompt_bracket "$(_prompt_client_d)"
+    if [ "$_THEME_USE_SIMPLE" ]; then
+      return
+    else
+      _prompt_bracket "$(_prompt_client_d)"
+    fi
   }
 
-  _build_lprompt() {
+  _build_lprompt_d() {
     setopt promptsubst
 
     _prompt_default_color
@@ -274,7 +343,25 @@
     _prompt_reset_color
   }
 
-  _build_rprompt() {
+  _build_lprompt_s() {
+    setopt promptsubst
+
+    _prompt_default_color
+    _prompt_cwd
+    _prompt_uid
+    _prompt_space
+    _prompt_reset_color
+  }
+
+  _build_lprompt() {
+    if [ "$_THEME_USE_SIMPLE" ]; then
+      _build_lprompt_s
+    else
+      _build_lprompt_d
+    fi
+  }
+
+  _build_rprompt_d() {
     setopt transientrprompt
 
     _prompt_default_color
@@ -285,9 +372,52 @@
     _prompt_reset_color
   }
 
-  : "${PROMPT_DEFAULT_FG:=white}"
-  : "${PROMPT_DEFAULT_BG:=}"
+  _build_rprompt_s() {
+    setopt transientrprompt
+
+    _prompt_default_color
+    _prompt_ret_status
+    _prompt_datetime
+    _prompt_reset_color
+  }
+
+  _build_rprompt() {
+    if [ "$_THEME_USE_SIMPLE" ]; then
+      _build_rprompt_s
+    else
+      _build_rprompt_d
+    fi
+  }
+}
+
+setup_theme() {
+  : "${THEME_DEFAULT_FG:=white}"
+  : "${THEME_DEFAULT_BG:=}"
+  : "${THEME_MIN_LINES:=10}"
+  : "${THEME_MIN_COLUMNS:=50}"
+
+  if [ "$THEME_DISABLE_TIMEIT" ] || \
+     [ "$LINES" -lt "$THEME_MIN_LINES" ]; then
+    disable_timeit
+  else
+    enable_timeit
+  fi
+
+  unset _THEME_USE_SIMPLE
+  if [ "$THEME_MINIMAL" ] || \
+     [ "$THEME_DISABLE_MULTILINE" ] || \
+     [ "$LINES" -lt "$THEME_MIN_LINES" ] || \
+     [ "$COLUMNS" -lt "$THEME_MIN_COLUMNS" ]; then
+    _THEME_USE_SIMPLE=1
+  fi
 
   PROMPT='$(_build_lprompt)'
-  RPROMPT='$(_build_rprompt)'
+  if [ "$THEME_DISABLE_RPROMPT" ]; then
+    RPROMPT=
+  else
+    RPROMPT='$(_build_rprompt)'
+  fi
 }
+
+trap 'setup_theme' WINCH
+setup_theme
