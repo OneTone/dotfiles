@@ -12,7 +12,7 @@
   _precmd_timeit() {
     [ "$_TIMEIT_START" ] || return
     local DURATION="$(printf '%.3fs' $(($(_timeit_now) - _TIMEIT_START)))"
-    printf '\e[%dC\e[1;31m%s\e[m\n' $((COLUMNS - ${#DURATION} - 1)) "$DURATION"
+    printf '\e[%dC\e[1;31m%s\e[m\n' $((COLUMNS - ${#DURATION})) "$DURATION"
     unset _TIMEIT_START
   }
 
@@ -156,11 +156,14 @@
       autoload -Uz vcs_info
       zstyle ':vcs_info:*' enable git
       zstyle ':vcs_info:*' get-revision true
-      zstyle ':vcs_info:*' check-for-changes true
-      zstyle ':vcs_info:*' stagedstr '✚ '
-      zstyle ':vcs_info:*' unstagedstr '● '
       zstyle ':vcs_info:*' formats ' %u%c'
       zstyle ':vcs_info:*' actionformats ' %u%c'
+      if [ ! "$(git config --get oh-my-zsh.hide-dirty)" = '1' ]; then
+        zstyle ':vcs_info:*' check-for-changes true
+        zstyle ':vcs_info:*' check-for-staged-changes true
+        zstyle ':vcs_info:*' stagedstr '✚ '
+        zstyle ':vcs_info:*' unstagedstr '● '
+      fi
       vcs_info
 
       local GIT_INFO_MSG="${vcs_info_msg_0_%% }"
@@ -178,8 +181,7 @@
         GIT_MODE=' >M<'
       elif [ -e "$REPO_PATH/rebase" ] || \
            [ -e "$REPO_PATH/rebase-apply" ] || \
-           [ -e "$REPO_PATH/rebase-merge" ] || \
-           [ -e "$REPO_PATH/../.dotest" ]; then
+           [ -e "$REPO_PATH/rebase-merge" ]; then
         GIT_MODE=' >R>'
       fi
 
