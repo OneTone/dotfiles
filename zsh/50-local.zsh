@@ -2,5 +2,5 @@
 
 : "${_ZSHRC_LOCAL:=$HOME/.zshrc.local}"
 if [ -f "$_ZSHRC_LOCAL" ]; then
-  source "$_ZSHRC_LOCAL"
+  . "$_ZSHRC_LOCAL"
 fi

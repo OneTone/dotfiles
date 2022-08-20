@@ -17,7 +17,7 @@ _add_omz_plugin() {
 : "${_ZSHRC_PLUG:=$HOME/.zshrc.plug}"
 if [ -f "$_ZSHRC_PLUG" ]; then
   [ ${(%):-%(!.0.1)} = 0 ] || _add_omz_plugin 'sudo'
-  source "$_ZSHRC_PLUG"
+  . "$_ZSHRC_PLUG"
 fi
 
 unset -f _add_omz_plugin

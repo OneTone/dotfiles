@@ -18,7 +18,7 @@ find_antigen() {
 
 : "${ANTIGEN_ZSH:=$(find_antigen)}"
 if [ -f "$ANTIGEN_ZSH" ]; then
-  source "$ANTIGEN_ZSH"
+  . "$ANTIGEN_ZSH"
 
   local M
   for M in "$ANTIGEN_MODULES[@]"; do
