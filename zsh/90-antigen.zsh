@@ -2,13 +2,13 @@
 
 find_antigen() {
   local ANTIGEN_DIRS=(
-    "$HOME/.antigen"
-    '/usr/local/share'
-    '/usr/share'
+    "$HOME/.antigen/"
+    '/usr/local/share/'
+    '/usr/share/zsh-'
   )
   local D
   for D in "$ANTIGEN_DIRS[@]"; do
-    local ANTIGEN_ZSH="$D/antigen/antigen.zsh"
+    local ANTIGEN_ZSH="${D}antigen/antigen.zsh"
     if [ -f "$ANTIGEN_ZSH" ]; then
       printf '%s' "$ANTIGEN_ZSH"
       break
