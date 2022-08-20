@@ -42,6 +42,7 @@ fi
 bindkey '^U' backward-kill-line
 bindkey '^[K' kill-whole-line
 bindkey '^[k' kill-whole-line
+bindkey '^[f' emacs-forward-word
 bindkey '^[l' down-case-word
 
 bindkey '^X^?' where-is
