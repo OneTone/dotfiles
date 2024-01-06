@@ -1,7 +1,7 @@
 function! s:download(url, dir)
   let url = shellescape(a:url)
   if executable('curl')
-    let file = shellescape(a:dir . '/' . fnamemodify(a:url, ':t'))
+    let file = shellescape(a:dir .. '/' .. fnamemodify(a:url, ':t'))
     execute 'silent !curl --create-dirs -fLso' file url
   elseif executable('wget')
     let dir = shellescape(a:dir)

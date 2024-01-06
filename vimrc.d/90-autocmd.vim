@@ -11,7 +11,7 @@ if has('autocmd')
   augroup reload_vimrc
     autocmd!
     autocmd BufWritePost $MYVIMRC source %
-    execute 'autocmd BufWritePost' expand('<sfile>:p:h') . '/*.vim' 'source $MYVIMRC'
+    execute 'autocmd BufWritePost' expand('<sfile>:p:h') .. '/*.vim' 'source $MYVIMRC'
     autocmd BufWritePost $MYGVIMRC if has('gui_running') | source % | endif
   augroup END
 endif
