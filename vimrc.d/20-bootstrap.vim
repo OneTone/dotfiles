@@ -11,10 +11,24 @@ function! s:download(url, dir)
   endif
 endfunction
 
+function! s:find_plug_vim()
+  let fallback = ''
+  for rtp in split(&runtimepath, ',')
+    let file = rtp .. '/autoload/plug.vim'
+    if empty(fallback)
+      let fallback = file
+    endif
+    if filereadable(file)
+      return file
+    endif
+  endfor
+  return fallback
+endfunction
+
 function! s:ensure_vimplug()
   let url = 'https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
-  let file = expand('~/.vim/autoload/plug.vim')
-  if !filereadable(file)
+  let file = s:find_plug_vim()
+  if !empty(file) && !filereadable(file)
     call s:download(url, fnamemodify(file, ':h'))
     if has('autocmd')
       autocmd VimEnter * PlugInstall --sync | source $MYVIMRC
