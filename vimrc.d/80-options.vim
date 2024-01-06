@@ -24,7 +24,7 @@ if has('extra_search')
 endif
 
 if has('linebreak')
-  set showbreak=↪\
+  set showbreak=↪
 endif
 
 if has('mouse')
