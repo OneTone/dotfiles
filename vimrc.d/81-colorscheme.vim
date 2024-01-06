@@ -1,5 +1,9 @@
 if has('gui_running')
-  colorscheme solarized
+  try
+    colorscheme solarized
+  endtry
 else
-  colorscheme Monokai
+  try
+    colorscheme Monokai
+  endtry
 endif
